@@ -1,3 +1,4 @@
+import logging
 from my_test import serializers
 from django.shortcuts import render
 from django.db import models
@@ -13,6 +14,9 @@ from rest_framework_jwt.settings import api_settings
 import rest_framework_jwt as jwt
 from django.core.mail import send_mail
 from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+from .paginators import StandartPagination
 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -33,10 +37,10 @@ class Authenticate(APIView):
             user = User.objects.get(email=email)
             if user:
                 try:
-                    print("yes? i do it")
+                    logging.warning("yes? i do it")
                     payload = jwt_payload_handler(user)
                     token = jwt_encode_handler(payload)
-                    send_mail('tokens', token, 'danyyl_l@ukr.net', [email], fail_silently = False, auth_user = 'danyyl_l@ukr.net', auth_password = 'kj,tyrj9', connection = None, html_message = None)
+                    send_mail('tokens', token, 'danyyl_l@ukr.net', [email], fail_silently=False, auth_user='danyyl_l@ukr.net', auth_password='kj,tyrj9', connection=None, html_message = None)
                     return Response({'result': 'Done'})
 
                 except Exception as e:
@@ -59,7 +63,10 @@ class StatusViewSet(viewsets.ModelViewSet):
     queryset = models.Status.objects.all()
     serializer_class = serializers.StatusSerializer
     permission_classes = (IsAuthenticated,)
-
+    pagination_class = StandartPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['status']
+    ordering_fields = ['status']
 
 class CompanyViewSet(viewsets.ModelViewSet):
     queryset = models.Company.objects.all()
